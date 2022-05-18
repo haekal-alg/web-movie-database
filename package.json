@@ -1,0 +1,25 @@
+{
+  "name": "proyek-akhir-sbd",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/haekal-alg/proyek-akhir-sbd.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/haekal-alg/proyek-akhir-sbd/issues"
+  },
+  "homepage": "https://github.com/haekal-alg/proyek-akhir-sbd#readme",
+  "dependencies": {
+    "body-parser": "^1.20.0",
+    "dotenv": "^16.0.1",
+    "express": "^4.18.1",
+    "pg": "^8.7.3"
+  }
+}

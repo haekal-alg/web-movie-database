@@ -130,8 +130,7 @@ app.get("/api/logout", (req, res) => {
 
 app.post('/api/search_from_user', (req, res) => {
     const { title, username } = req.body
-    //console.log("Search: " + title)
-    //console.log(username)
+
     const query = 
     `SELECT 
         m.title, 
@@ -175,6 +174,7 @@ app.post('/api/search_from_user', (req, res) => {
 
 app.post('/api/search_from_admin', (req, res) => {
     const { title } = req.body
+
     const query = 
     `SELECT 
         m.movie_id,

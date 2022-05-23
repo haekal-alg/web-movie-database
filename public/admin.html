@@ -37,28 +37,41 @@
         <h1 style='font-family:monospace'>Web Movie Database</h1>
 
         <form style='text-align:center; font-family:monospace'>
-            <input type='text' id='searchInput' size='60' placeholder='Search movies' >
-            <button id='searchBtn'>Search</button>
+            <button id='addBtn'>Add new movie</button>
+            <input type='text' id='searchInput' size='60' placeholder='Search movies' onkeydown="pressEnter(event)">
+            <button id='searchBtn'>Search</button>           
         </form>
 
         <br></br>
     </body>
 
     <script>
+        document.getElementById("addBtn").onclick = function () {
+            window.location = "http://localhost:8080/admin_add.html";
+            return false
+        };
+
         const usernameParagraph = document.getElementById('username')
         const searchInput = document.getElementById('searchInput')
-        const searchBtn = document.getElementById('searchBtn')
-        
-        searchBtn.addEventListener('click', postSearch)
 
+        function pressEnter (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                document.getElementById("searchBtn").click();
+            }
+        };
+
+        const searchBtn = document.getElementById('searchBtn')
+        searchBtn.addEventListener('click', postSearch)
+       
         // when page gets load, get session
         window.onload = (async function() {
-            const options = {
+            let options = {
                 method: 'GET', 
                 headers: { 'Content-Type': 'application/json'}
             }
-            const response = await fetch('api/get_session');
-            const data = await response.json()
+            let response = await fetch('api/get_session');
+            let data = await response.json()
         
             if (data.userid == undefined) window.location = "http://localhost:8080/login.html";
             usernameParagraph.innerHTML = data.userid;
@@ -68,10 +81,7 @@
             e.preventDefault()
             const options = {
                 method: 'POST', 
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                // send whatever in the input search to the api
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ title: searchInput.value}) 
             }
             const response = await fetch('api/search_from_admin', options);

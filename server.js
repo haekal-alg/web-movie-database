@@ -6,11 +6,9 @@ require("dotenv").config();
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const session = require("express-session");
-const store = new session.MemoryStore();
 const app = express();
 const { Client } = require("pg");
 const bp = require("body-parser");
-const { reset } = require("nodemon");
 const PORT = 8080;
 
 app.use(bp.json());
@@ -45,19 +43,13 @@ app.use(
     saveUninitialized: true,
     cookie: { maxAge: oneDay },
     resave: false,
-    store: store,
   })
 );
 
 app.get("/", (req, res) => {
-  let user_session = req.session;
   // if user is not logged in then send it to the login page
-  if (!user_session.userid) {
-    res.redirect("../login.html");
-    // else send it to the search page
-  } else {
-    res.redirect("../search.html");
-  }
+  if (!req.session.userid) res.redirect("../login.html");
+  else res.redirect("../search.html");
 });
 
 app.get("/api/get_session", (req, res) => {
@@ -65,20 +57,19 @@ app.get("/api/get_session", (req, res) => {
 });
 
 app.post("/api/authenticate", (req, res) => {
-    const username = req.body.username
-    const password = req.body.password;
-    const query = `SELECT password FROM users WHERE
-                  username = '${username};'`;
+    const { username, password } = req.body;
+    /*
+    const query = `SELECT password FROM users WHERE username = '${username};'`;
+   
     db.query(query, (err, results) => {
-
-        if(err){
+        if (err){
             console.log(err);
             alert('Login failed');
             return;
         }
-        try{
-            //if successful, redirect to search.html
-            if(await bcrypt.compare(password, results.rows)){
+        try {
+            // if successful, redirect to search.html
+            if(await bcrypt.compare(password, results.rows)) {
                 let user_session = req.session;
                 user_session.userid = username;
                 console.log(`Login as ${user_session.userid}`);
@@ -87,14 +78,30 @@ app.post("/api/authenticate", (req, res) => {
                 res.send("Invalid username or password");            
             }
         }
-        catch{
+        catch {
             res.status(500).send();
         }
-        });
+    });
+    */
+
+    // hanya untuk testing
+    if (username == 'user1' && password == 'user1'){
+        let user_session = req.session;
+        user_session.userid = username;
+        res.redirect("../search.html")
+    } else if (username == 'admin' && password == 'admin'){
+        let user_session = req.session;
+        user_session.userid = username;
+        res.redirect("../admin.html")
+    }
+    else {
+        res.send('Invalid username or password');
+    }
 });
 
+/* gw comment dulu soalnya masih ada error
 app.post("/api/register", (req, res) => {
-    /*Belum bikin jika username sama kayak di database */
+    // Belum bikin jika username sama kayak di database 
     try{
         const hashedPassword = await bycrpt.hash(req.body.password, 10);
         const username = req.body.username;
@@ -114,24 +121,29 @@ app.post("/api/register", (req, res) => {
         res.status(500).send();
     }
 });
+*/
 
 app.get("/api/logout", (req, res) => {
   req.session.destroy();
   res.redirect("../login.html");
 });
 
-app.post("/api/search_from_user", (req, res) => {
-  const { title, username } = req.body;
-  //console.log("Search: " + title)
-  //console.log(username)
-  const query = `SELECT 
+app.post('/api/search_from_user', (req, res) => {
+    const { title, username } = req.body
+    //console.log("Search: " + title)
+    //console.log(username)
+    const query = 
+    `SELECT 
         m.title, 
-        TO_CHAR(m.release_date, 'dd Month, yyyy'), 
+        TO_CHAR(m.release_date, 'dd Month yyyy'), 
         m.runtime, 
         g.genre_name, 
-        u.round, 
-        v.count, 
-        r.user_rating
+        CASE
+            WHEN u.round IS NOT NULL THEN CONCAT(u.round, '/10 (', v.count, ')')
+            ELSE NULL
+        END AS wmd_rating,
+        r.user_rating,
+        s.status
     FROM 
         movies AS m 
     INNER JOIN 
@@ -146,7 +158,46 @@ app.post("/api/search_from_user", (req, res) => {
     LEFT JOIN
         (SELECT movie_id, COUNT(movie_id) FROM users_ratings GROUP BY movie_id) AS v
         ON v.movie_id = m.movie_id
-    WHERE lower(m.title) SIMILAR TO '(${title}%|%${title}%|%${title})';`; // at the start, middle or end
+    LEFT JOIN
+        (SELECT * FROM users_mov_statuses WHERE username = '${username}') AS s 
+        ON s.movie_id = m.movie_id
+    WHERE lower(m.title) SIMILAR TO '(${title}%|%${title}%|%${title})';` // at the start, middle or end
+
+    db.query(query, (err, results) => {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        console.log(results.rows)
+        res.status(200).send(results.rows);
+    });
+})
+
+app.post('/api/search_from_admin', (req, res) => {
+    const { title } = req.body
+    const query = 
+    `SELECT 
+        m.movie_id,
+        m.title, 
+        TO_CHAR(m.release_date, 'dd Month yyyy'), 
+        m.runtime, 
+        g.genre_name, 
+        CASE
+            WHEN u.round IS NOT NULL THEN CONCAT(u.round, ' /10 (', v.count, ')')
+            ELSE NULL
+        END AS wmd_rating
+    FROM 
+        movies AS m 
+    INNER JOIN 
+        genres AS g 
+        ON m.genre_id = g.genre_id 
+    LEFT JOIN 
+        (SELECT movie_id, ROUND(AVG(user_rating), 2) FROM users_ratings GROUP BY movie_id) AS u
+        ON u.movie_id = m.movie_id
+    LEFT JOIN
+        (SELECT movie_id, COUNT(movie_id) FROM users_ratings GROUP BY movie_id) AS v
+        ON v.movie_id = m.movie_id
+    WHERE lower(m.title) SIMILAR TO '(${title}%|%${title}%|%${title})';` // at the start, middle or end
 
   db.query(query, (err, results) => {
     if (err) {

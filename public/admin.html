@@ -72,32 +72,18 @@
                     'Content-Type': 'application/json'
                 },
                 // send whatever in the input search to the api
-                body: JSON.stringify({ title: searchInput.value, username: usernameParagraph.innerHTML}) 
+                body: JSON.stringify({ title: searchInput.value}) 
             }
-            const response = await fetch('api/search_from_user', options);
+            const response = await fetch('api/search_from_admin', options);
             const data = await response.json()
             generateTable(data)
         }
-
-        /*
-        var rad = document.getElementsByName('')
-        var prev = null;
-        for (var i = 0; i < rad.length; i++) {
-            rad[i].addEventListener('change', function() {
-                (prev) ? console.log(prev.value): null;
-                if (this !== prev) {
-                    prev = this;
-                }
-                console.log(this.value)
-            });
-        }
-        */
         
         /* -------------------------------------------------------------- */
         // http://jsfiddle.net/QwBsa/12/
         async function generateTable(serverResponse) {
             const tableId = "movieTable";
-            const titleRow  = ['Title', 'Release Date', 'Runtime', 'Genre', 'WMD Rating', 'Your Rating', 'Movie Status'];
+            const titleRow  = ['Movie ID', 'Title', 'Release Date', 'Runtime', 'Genre', 'WMD Rating'];
 
             try { // delete table before generating it
                 document.getElementById(tableId).remove()
@@ -121,54 +107,29 @@
             }
             
             // generate table body
-            var formArray = [];
-            var radioId = -1;
             serverResponse.forEach(key => {
                 var row = document.createElement('tr');
-                radioId += 1;
 
                 for (let value in key) {
                     console.log(`${value}: ${key[value]}`);
                     var item = key[value];
                     var cell = document.createElement('td');
-                    
-                    if (value == 'wmd_rating') 
+
+                    if (value == 'title')
                     {
-                        if (!item) item = '0/10 (0)'
-                    } 
-                    else if (value == 'user_rating') 
-                    {
-                        if (!item) item = 'Rate'
-                    } 
-                    else if (value == 'status') 
-                    {   
-                        var form = document.createElement('form');
-                        form.name = `radiobox${radioId}`;
-                        //form.addEventListener('')
-                        // create radio button
-                        const movie_status = ['Plan to Watch', 'Completed'];
-                        for (let i = 0; i < movie_status.length; i++) {
-                            // radiobox
-                            var radiobutton = document.createElement('input'); radiobutton.type = 'radio';
-                            radiobutton.id = `radios`;
-                            radiobutton.addEventListener
-                            //radiobox.checked = true; // change this as per database
-                            
-                            // (label <- text)
-                            var label = document.createElement('label');
-                            var text = document.createTextNode(movie_status[i]);
-                            
-                            //  cell <- form <__ (text is in label) 
-                            //                \ radiobox
-                            label.appendChild(text);
-                            form.appendChild(radiobutton);
-                            form.appendChild(label);
-                            cell.appendChild(form);
-                        }
-                       // formArray[radioId] = 
+                        var createHref = document.createElement('a');
+                        var createText = document.createTextNode(item);
+                        createHref.href = `/admin_edit.html?title=${item}`
+
+                        createHref.appendChild(createText);
+                        cell.appendChild(createHref)
                         row.appendChild(cell);
                         continue;
                     }
+                    else if (value == 'wmd_rating') 
+                    {
+                        if (!item) item = '0/10 (0)'
+                    } 
                     cell.textContent = item
                     row.appendChild(cell);
                 }

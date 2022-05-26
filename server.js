@@ -28,32 +28,32 @@ const db = new Client({
 */
 
 const db = new Client({
-  host: "localhost",
-  user: "postgres",
-  database: "web_movie_database",
-  password: "haekal",
-  port: 5432,
+    host: "localhost",
+    user: "postgres",
+    database: "web_movie_database",
+    password: "haekal",
+    port: 5432,
 });
 
 // session middleware
 const oneDay = 1000 * 60 * 60 * 24;
-app.use(
-  session({
-    secret: "this is a secret",
-    saveUninitialized: true,
-    cookie: { maxAge: oneDay },
-    resave: false,
-  })
+    app.use(
+        session({
+            secret: "this is a secret",
+            saveUninitialized: true,
+            cookie: { maxAge: oneDay },
+            resave: false,
+    })
 );
 
 app.get("/", (req, res) => {
-  // if user is not logged in then send it to the login page
-  if (!req.session.userid) res.redirect("../login.html");
-  else res.redirect("../search.html");
+    // if user is not logged in then send it to the login page
+    if (!req.session.userid) res.redirect("../login.html");
+    else res.redirect("../search.html");
 });
 
 app.get("/api/get_session", (req, res) => {
-  res.send(req.session);
+    res.send(req.session);
 });
 
 app.post("/api/authenticate", (req, res) => {
@@ -124,13 +124,13 @@ app.post("/api/register", (req, res) => {
 */
 
 app.get("/api/logout", (req, res) => {
-  req.session.destroy();
-  res.redirect("../login.html");
+    req.session.destroy();
+    res.redirect("../login.html");
 });
 
 app.post('/api/search_from_user', (req, res) => {
     const { title, username } = req.body
-
+    console.log(username)
     const query = 
     `SELECT 
         m.title, 
@@ -199,24 +199,60 @@ app.post('/api/search_from_admin', (req, res) => {
         ON v.movie_id = m.movie_id
     WHERE lower(m.title) SIMILAR TO '(${title}%|%${title}%|%${title})';` // at the start, middle or end
 
-  db.query(query, (err, results) => {
-    if (err) {
-      console.log(err);
-      return;
-    }
-    console.log(results.rows);
-    res.status(200).send(results.rows);
-  });
+    db.query(query, (err, results) => {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        console.log(results.rows);
+        res.status(200).send(results.rows);
+    });
 });
 
+app.post('/api/update_status', (req, res) => {
+    const jsonArray = req.body;
+    console.log(jsonArray)
+    var query = '';
+
+    // form the query
+    for (var i = 0; i < jsonArray.length; i++) {
+        //console.log(jsonArray[i])
+        var { username, status, title } = jsonArray[i];
+        // delete row if status null/radio button is both unchecked
+        if (status == null) {
+            query += 
+            `DELETE FROM users_mov_statuses 
+            WHERE username = '${username}' AND movie_id = (SELECT movie_id FROM movies WHERE title = '${title}');`;
+        }
+        // otherwise insert/update status
+        else {
+            query += 
+            `INSERT INTO users_mov_statuses (username, status, movie_id) VALUES 
+                ('${username}', ${status}, (SELECT movie_id FROM movies WHERE title = '${title}')) 
+                ON CONFLICT (username, movie_id) DO UPDATE SET status = ${status};
+            `;
+        }
+    }
+    //console.log(query)
+    db.query(query, (err, results) => {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        console.log('Status is Updated!')
+        //console.log(results.rows);
+        //res.status(200).send(results.rows);
+    });
+})
+
 db.connect((err) => {
-  if (err) {
-    console.log(err);
-    return;
-  }
-  console.log(`Connected to ${process.env.DB_DATABASE}`);
+    if (err) {
+        console.log(err);
+        return;
+    }
+    console.log(`Connected to ${process.env.DB_DATABASE}`);
 });
 
 app.listen(8080, () => {
-  console.log(`Server is running on port ${PORT}`);
+    console.log(`Server is running on port ${PORT}`);
 });

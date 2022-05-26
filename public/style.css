@@ -4,15 +4,23 @@ body {
   font-family: sans-serif;
   background-image: url("img/img.jpg");
 }
-a:link {
-  color: #b7d417;
-  text-decoration: none;
-}
+
 a:hover {
   color: #1ba10d;
   font-weight: bold;
   text-decoration: underline solid #1ba10d;
 }
+.to-register {
+  font-size: 14px;
+  color: yellow;
+  text-decoration: none;
+  margin-bottom: 15px;
+}
+/* .to-admin {
+  font-size: 14px;
+  color: yellow;
+  text-decoration: none;
+} */
 .box {
   width: 300px;
   padding: 40px;

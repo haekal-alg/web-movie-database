@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang='en'>
+    <head>
+        <style>
+            h1 {
+                text-align: center;
+            }
+
+            table {
+                font-family: arial, sans-serif;
+                font-size: 80%;
+                margin-left: auto;
+                margin-right: auto;
+                border-collapse: collapse;
+                width: 50%;
+                white-space:nowrap;
+            }
+
+            td, th {
+                border: 1px solid #dddddd;
+                text-align: center;
+                padding: 4px;
+            }
+
+            tr:nth-child(even) {
+                background-color: #dddddd;
+            }
+        </style>
+    </head>    
+
+    <body>
+        <div style="text-align:right; font-family:monospace;">    
+            <p id="username">temp_user</p>
+            <a href="/api/logout">Logout</a> 
+        </div>
+
+        <h1 style='font-family:monospace'>Web Movie Database</h1>
+
+        <form style='text-align:center; font-family:monospace'>
+            <input type='text' id='searchInput' size='60' placeholder='Search movies' >
+            <button id='searchBtn'>Search</button>
+            <br></br>
+            <input type='text' size='65' style="visibility: hidden;" >
+            <button id='saveBtn'>Save Status</button>
+        </form>
+        <br></br>
+    </body>
+
+    <script>
+        /* WARNING: spaghetti code is ahead. Proceed with caution! */
+        var rowCount;
+        const usernameParagraph = document.getElementById('username')
+        const searchInput = document.getElementById('searchInput')
+        
+        const searchBtn = document.getElementById('searchBtn')
+        searchBtn.addEventListener('click', postSearch)
+
+        // when page gets load, get session
+        window.onload = (async function() {
+            const options = {
+                method: 'GET', 
+                headers: { 'Content-Type': 'application/json'}
+            }
+            const response = await fetch('api/get_session');
+            const data = await response.json()
+        
+            if (data.userid == undefined) window.location = "http://localhost:8080/login.html";
+            usernameParagraph.innerHTML = data.userid;
+        })();
+        
+        async function postSearch (e) {
+            e.preventDefault()
+            const options = {
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: searchInput.value, username: usernameParagraph.innerHTML}) 
+            }
+            const response = await fetch('api/search_from_user', options);
+            const data = await response.json();
+            generateTable(data);
+        }
+        
+        /* -------------------------------------------------------------- */
+        // http://jsfiddle.net/QwBsa/12/
+        async function generateTable(serverResponse) {
+            const tableId = "movieTable";
+            const titleRow  = ['Title', 'Release Date', 'Runtime', 'Genre', 'WMD Rating', 'Your Rating', 'Movie Status'];
+            var movieTitles = [];
+
+            try { // delete table before generating it
+                document.getElementById(tableId).remove()
+            }
+            catch (err) {
+                console.log(err)
+            }
+
+            var body = document.body;
+            var table = document.createElement('table');
+            var thead = document.createElement('thead');
+            var tbody = document.createElement('tbody');
+
+            table.setAttribute("id", tableId);
+            table.appendChild(thead);
+
+            // generate table header
+            for (var i = 0; i < titleRow.length; i++) {
+                thead.appendChild(document.createElement('th')).
+                appendChild(document.createTextNode(titleRow[i]));
+            }
+            
+            // generate table body
+            var formArray = [];
+            var radioId = -1;
+            serverResponse.forEach(key => {
+                console.log('-----------');
+                var row = document.createElement('tr');
+                radioId += 1;
+
+                for (let value in key) {
+                    console.log(`${value}: ${key[value]}`);
+                    var item = key[value];
+                    var cell = document.createElement('td');
+                    
+                    if (value == 'title') 
+                    {
+                        movieTitles.push(item);
+                    } 
+                    else if (value == 'wmd_rating') 
+                    {
+                        if (!item) item = '0/10 (0)'
+                    } 
+                    else if (value == 'user_rating') 
+                    {
+                        if (!item)
+                        {
+                            var createHref = document.createElement('a');
+                            var createText = document.createTextNode('Rate');
+                            createHref.href = '#'
+
+                            createHref.appendChild(createText);
+                            cell.appendChild(createHref)
+                            row.appendChild(cell);
+                            continue;
+                        } 
+                    } 
+                    // https://stackoverflow.com/questions/8838648/onchange-event-handler-for-radio-button-input-type-radio-doesnt-work-as-one
+                    else if (value == 'status') 
+                    {   
+                        var form = document.createElement('form');
+                        form.name = `radiobox${radioId}`;
+                        // create radio button
+                        const movie_status = ['Plan to Watch', 'Completed'];
+                        for (let i = 0; i < movie_status.length; i++) {
+                            // radiobox
+                            var radioButton = document.createElement('input'); 
+                            radioButton.type = 'radio';
+                            radioButton.name = 'myRadios';
+                            radioButton.value = i;
+                            radioButton.title = movieTitles[radioId];
+                            if (i == item) radioButton.checked = true;
+
+                            // (label <- text)
+                            var label = document.createElement('label');
+                            var text = document.createTextNode(movie_status[i]);
+                            
+                            //  cell <- form <-- (text is in label) 
+                            //                \ radiobox
+                            label.appendChild(text);
+                            form.appendChild(radioButton);
+                            form.appendChild(label);
+                        }
+                        // creates 'clear' text
+                        var newlabel = document.createElement("Label");
+                        newlabel.innerHTML = " [clear]";
+                        newlabel.style = 'cursor: pointer; color: blue;';
+                        newlabel.param = radioId
+                        newlabel.addEventListener('click', function() {
+                            var rad = document.getElementsByName(`radiobox${this.param}`)[0]
+                            rad[0].checked = false;
+                            rad[1].checked = false;
+                        }); 
+                        
+                        form.appendChild(newlabel);
+                        cell.appendChild(form);
+                        row.appendChild(cell);
+                        continue;
+                    }
+                    cell.textContent = item
+                    row.appendChild(cell);
+                }
+                tbody.appendChild(row);
+            });
+            table.appendChild(tbody);
+            body.appendChild(table);
+
+            rowCount = radioId; // sets the global variable
+            const saveBtn = document.getElementById('saveBtn')
+            saveBtn.addEventListener('click', updateStatus)
+        }
+        
+        async function updateStatus(e) {
+            // wht Doesnt it reload if 'rate' is clicked?
+            //e.preventDefault()
+            var checkedRadios = []
+            for (let i = 0; i <= rowCount; i++) 
+            {
+                // loop through every form that contains radio button
+                var rad = document.getElementsByName(`radiobox${i}`)[0] 
+                // loop through every radio button in a form
+                var isEmpty = true;
+                for (var j = 0; j < rad.length; j++) 
+                {
+                    var currentRad = rad[j];
+                    // if both radio button empty
+                    if (isEmpty && j == rad.length-1) 
+                    {
+                        checkedRadios[i] = { 
+                            username: usernameParagraph.innerHTML,
+                            status: null, 
+                            title: currentRad.title
+                        }
+                    }
+
+                    // if one of the radio button is checked
+                    if (currentRad.checked) 
+                    {
+                        checkedRadios[i] = { 
+                            username: usernameParagraph.innerHTML,
+                            status: currentRad.value, 
+                            title: currentRad.title
+                        }
+                        isEmpty = false;
+                    }
+                }
+            }
+            //console.log(rowCount)
+            const options = {
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(checkedRadios) 
+            }
+            const response = await fetch('api/update_status', options);
+            const data = await response.json();
+            //windows.location.reload();
+        } 
+
+        
+    </script>
+</html>

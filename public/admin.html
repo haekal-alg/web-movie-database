@@ -37,9 +37,12 @@
         <h1 style='font-family:monospace'>Web Movie Database</h1>
 
         <form style='text-align:center; font-family:monospace'>
-            <button id='addBtn'>Add new movie</button>
-            <input type='text' id='searchInput' size='60' placeholder='Search movies' onkeydown="pressEnter(event)">
+                        <input type='text' id='searchInput' size='60' placeholder='Search movies' onkeydown="pressEnter(event)">
             <button id='searchBtn'>Search</button>           
+
+            <br></br>
+            <input type='text' size='67' style="visibility: hidden;" >
+            <button id='addBtn'>Add new movie</button>
         </form>
 
         <br></br>
@@ -48,13 +51,13 @@
     <script>
         document.getElementById("addBtn").onclick = function () {
             window.location = "http://localhost:8080/admin_add.html";
-            return false
+            return false;
         };
 
         const usernameParagraph = document.getElementById('username')
         const searchInput = document.getElementById('searchInput')
 
-        function pressEnter (event) {
+        function pressEnter(event) {
             if (event.key === "Enter") {
                 event.preventDefault();
                 document.getElementById("searchBtn").click();
@@ -75,6 +78,7 @@
         
             if (data.userid == undefined) window.location = "http://localhost:8080/login.html";
             usernameParagraph.innerHTML = data.userid;
+            document.getElementById("searchBtn").click();
         })();
         
         async function postSearch (e) {

@@ -17,21 +17,20 @@ app.use(bp.urlencoded({ extended: true }));
 
 app.use(express.static("public")); // anything in public can be send in here
 
-/* Azure
-const db = new Client({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    database: process.env.DB_DATABASE,
-    password: process.env.DB_PASSWORD,
-    port: 5432,
-    ssl: true
-})
-*/
+// const db = new Client({
+//     host: process.env.DB_HOST,
+//     user: process.env.DB_USER,
+//     database: process.env.DB_DATABASE,
+//     password: process.env.DB_PASSWORD,
+//     port: 5432,
+//     ssl: true
+// })
 
 const db = new Client({
   host: "localhost",
   user: "postgres",
-  database: "final",
+  database: "web_movie_database",
+  password: "haekal", 
   port: 5432,
 });
 
@@ -57,14 +56,18 @@ app.get("/api/get_session", (req, res) => {
 });
 
 app.post("/api/login", async (req, res) => {
+  
   const { username, password } = req.body;
+  /*
   const query = `SELECT password FROM users WHERE username = '${username};'`;
+  
   db.query(query, (err, results) => {
     if (err) {
       console.log(err);
       alert("Login failed");
       return;
     }
+    
     try {
       //if admin, redirect to admin.html
       const dataPassword = JSON.parse(JSON.stringify(results));
@@ -84,20 +87,20 @@ app.post("/api/login", async (req, res) => {
       res.status(500).send();
     }
   });
-
+*/
   // hanya untuk testing
-  // if (username == 'user1' && password == 'user1'){
-  //     let user_session = req.session;
-  //     user_session.userid = username;
-  //     res.redirect("../search.html")
-  // } else if (username == 'admin' && password == 'admin'){
-  //     let user_session = req.session;
-  //     user_session.userid = username;
-  //     res.redirect("../admin.html")
-  // }
-  // else {
-  //     res.send('Invalid username or password');
-  // }
+  if (username == 'user1' && password == 'user1'){
+      let user_session = req.session;
+      user_session.userid = username;
+      res.redirect("../search.html")
+  } else if (username == 'admin' && password == 'admin'){
+      let user_session = req.session;
+      user_session.userid = username;
+      res.redirect("../admin.html")
+  }
+  else {
+      res.send('Invalid username or password');
+  }
 });
 
 app.post("/register", async (req, res) => {
@@ -246,11 +249,12 @@ app.post("/api/update_status", (req, res) => {
   db.query(query, (err, results) => {
     if (err) {
       console.log(err);
+      res.status(503).send({"status": "ERROR"});
       return;
     }
     console.log("Status is Updated!");
     //console.log(results.rows);
-    //res.status(200).send(results.rows);
+    res.status(200).send({"status": "OK"});
   });
 });
 

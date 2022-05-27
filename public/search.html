@@ -66,6 +66,7 @@
         
             if (data.userid == undefined) window.location = "http://localhost:8080/login.html";
             usernameParagraph.innerHTML = data.userid;
+            //document.getElementById("searchBtn").click();
         })();
         
         async function postSearch (e) {
@@ -200,7 +201,7 @@
         
         async function updateStatus(e) {
             // wht Doesnt it reload if 'rate' is clicked?
-            //e.preventDefault()
+            e.preventDefault() // prevent reload
             var checkedRadios = []
             for (let i = 0; i <= rowCount; i++) 
             {
@@ -241,6 +242,13 @@
             }
             const response = await fetch('api/update_status', options);
             const data = await response.json();
+            console.log(response.status)
+            if (response.status == 200) {
+                //delete window.alert;
+                alert('Status is sucessfully updated!');
+            } else {
+                alert('ERROR!');
+            }
             //windows.location.reload();
         } 
 

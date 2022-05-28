@@ -95,13 +95,11 @@ app.post("/api/register", async (req, res) => {
   //kondisi apabila username sama dengan database belum
   if (!username || !password || !repassword) {
     alert("Enter all fields!");
-    res.send("Blank field");
+    res.redirect("../register.html");
   }
   if (password != repassword) {
     alert("Password doesn't match!");
-    console.log(password);
-    console.log(repassword);
-    res.send("password doesn't match");
+    res.redirect("../register.html");
   } else {
     //form passed
     db.query(

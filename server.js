@@ -10,6 +10,7 @@ const bcrypt = require("bcrypt");
 const app = express();
 const { Client } = require("pg");
 const bp = require("body-parser");
+const alert = require("alert");
 const PORT = 8080;
 
 app.use(bp.json());
@@ -27,11 +28,11 @@ app.use(express.static("public")); // anything in public can be send in here
 // })
 
 const db = new Client({
-  host: "localhost",
-  user: "postgres",
+  host: "haekal-sbd.postgres.database.azure.com",
+  user: "haekal_sbd",
   database: "web_movie_database",
-  password: "haekal", 
-  port: 5432,
+  password: "Random123",
+  ssl: true,
 });
 
 // session middleware
@@ -56,86 +57,65 @@ app.get("/api/get_session", (req, res) => {
 });
 
 app.post("/api/login", async (req, res) => {
-  
   const { username, password } = req.body;
-  /*
-  const query = `SELECT password FROM users WHERE username = '${username};'`;
-  
+  const query = `SELECT password FROM users WHERE username = '${username}'`;
   db.query(query, (err, results) => {
     if (err) {
       console.log(err);
-      alert("Login failed");
       return;
     }
-    
+    const dataPassword = JSON.parse(JSON.stringify(results.rows));
     try {
-      //if admin, redirect to admin.html
-      const dataPassword = JSON.parse(JSON.stringify(results));
-      if (bcrypt.compare(password, dataPassword)) {
-        if (username != "Admin") {
-          let user_session = req.session;
-          user_session.userid = username;
-          console.log(`Login as ${user_session.userid}`);
-          // if successful, redirect to search.html
+      if (bcrypt.compare(password, dataPassword[0].password)) {
+        let user_session = req.session;
+        user_session.userid = username;
+        console.log(`Login as ${user_session.userid}`);
+        // res.send("Login successful!");
+        if (username != "admin") {
           res.redirect("../search.html");
+        } else {
+          res.redirect("../admin.html");
         }
-        res.redirect("../admin.html");
       } else {
         res.send("Invalid username or password");
       }
     } catch {
-      res.status(500).send();
+      res.status(500).send("gagal");
     }
   });
-*/
-  // hanya untuk testing
-  if (username == 'user1' && password == 'user1'){
-      let user_session = req.session;
-      user_session.userid = username;
-      res.redirect("../search.html")
-  } else if (username == 'admin' && password == 'admin'){
-      let user_session = req.session;
-      user_session.userid = username;
-      res.redirect("../admin.html")
-  }
-  else {
-      res.send('Invalid username or password');
-  }
 });
 
-app.post("/register", async (req, res) => {
+app.post("/api/register", async (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
   const repassword = req.body.repassword;
+  //try {
+  const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
-  try {
-    const hashedPassword = await bcrypt.hash(req.body.password, 10);
-
-    //kondisi apabila username sama dengan database belum
-    if (!username || !password || !repassword) {
-      alert("Enter all fields!");
-      res.send("Blank field");
-    }
-    if (password != repassword) {
-      alert("Password doesn't match!");
-      res.send("password doesn't match");
-    } else {
-      //form passed
-      db.query(
-        "INSERT INTO users (username, password) VALUES ($1, $2)",
-        [username, hashedPassword],
-        (err) => {
-          if (err) {
-            console.log(err);
-            return;
-          }
-          res.send("Register Successful");
-          res.redirect("../login.html");
+  //kondisi apabila username sama dengan database belum
+  if (!username || !password || !repassword) {
+    alert("Enter all fields!");
+    res.send("Blank field");
+  }
+  if (password != repassword) {
+    alert("Password doesn't match!");
+    console.log(password);
+    console.log(repassword);
+    res.send("password doesn't match");
+  } else {
+    //form passed
+    db.query(
+      "INSERT INTO users (username, password) VALUES ($1, $2)",
+      [username, hashedPassword],
+      (err) => {
+        if (err) {
+          console.log(err);
+          alert(err);
+          return;
         }
-      );
-    }
-  } catch {
-    res.status(500).send();
+        res.redirect("../login.html");
+      }
+    );
   }
 });
 
@@ -249,12 +229,12 @@ app.post("/api/update_status", (req, res) => {
   db.query(query, (err, results) => {
     if (err) {
       console.log(err);
-      res.status(503).send({"status": "ERROR"});
+      res.status(503).send({ status: "ERROR" });
       return;
     }
     console.log("Status is Updated!");
     //console.log(results.rows);
-    res.status(200).send({"status": "OK"});
+    res.status(200).send({ status: "OK" });
   });
 });
 

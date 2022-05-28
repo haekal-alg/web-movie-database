@@ -51,14 +51,14 @@ app.get("/api/get_session", (req, res) => {
 app.post("/api/login", async (req, res) => {
   const { username, password } = req.body;
   const query = `SELECT password FROM users WHERE username = '${username}'`;
-  db.query(query, (err, results) => {
+  db.query(query, async (err, results) => {
     if (err) {
       console.log(err);
       return;
     }
     const dataPassword = JSON.parse(JSON.stringify(results.rows));
     try {
-      if (bcrypt.compare(password, dataPassword[0].password)) {
+      if (await bcrypt.compare(password, dataPassword[0].password)) {
         let user_session = req.session;
         user_session.userid = username;
         console.log(`Login as ${user_session.userid}`);
@@ -69,10 +69,12 @@ app.post("/api/login", async (req, res) => {
           res.redirect("../admin.html");
         }
       } else {
-        res.send("Invalid username or password");
+        alert("password incorrect");
+        res.redirect("../login.html");
       }
     } catch {
-      res.status(500).send("gagal");
+      alert("password doesn't match!");
+      res.redirect("../login.html");
     }
   });
 });
@@ -86,11 +88,10 @@ app.post("/api/register", async (req, res) => {
 
   //kondisi apabila username sama dengan database belum
   if (!username || !password || !repassword) {
-    alert("Enter all fields!");
+    alert("please enter all fields");
     res.redirect("../register.html");
-  }
-  if (password != repassword) {
-    alert("Password doesn't match!");
+  } else if (password != repassword) {
+    alert("password doesn't match");
     res.redirect("../register.html");
   } else {
     //form passed

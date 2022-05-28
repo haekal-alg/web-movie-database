@@ -18,20 +18,12 @@ app.use(bp.urlencoded({ extended: true }));
 
 app.use(express.static("public")); // anything in public can be send in here
 
-// const db = new Client({
-//     host: process.env.DB_HOST,
-//     user: process.env.DB_USER,
-//     database: process.env.DB_DATABASE,
-//     password: process.env.DB_PASSWORD,
-//     port: 5432,
-//     ssl: true
-// })
-
 const db = new Client({
-  host: "haekal-sbd.postgres.database.azure.com",
-  user: "haekal_sbd",
-  database: "web_movie_database",
-  password: "Random123",
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  database: process.env.DB_DATABASE,
+  password: process.env.DB_PASSWORD,
+  port: 5432,
   ssl: true,
 });
 

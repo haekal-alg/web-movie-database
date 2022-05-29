@@ -12,9 +12,7 @@ body {
   height: 100%;
   place-items: center;
   text-align: center;
-  background-image: url("img/img.jpg");
-  background-size: cover;
-  background-repeat: no-repeat;
+  background-color: black;
 }
 
 a:link {

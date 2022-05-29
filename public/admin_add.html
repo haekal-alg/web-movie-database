@@ -1,14 +1,99 @@
 <!DOCTYPE html>
-<html lang='en'>
+<html lang="en" dir="'lts">
     <head>
         <style>
-            h1 {
+            title { 
                 text-align: center;
             }
-        </style>
-    </head>    
 
+            body {
+                text-align: center;
+            }
+
+            label {
+                font-family: monospace
+            }
+
+            form {
+                text-align:center; 
+                font-family:monospace
+            }
+        </style>
+        <meta charset="utf-8" />
+        <title>Add Movie</title>
+    </head>
     <body>
-        <h1 style='font-family:monospace'>Add Movie</h1>
+            <h1 style='font-family: monospace'>Add Movie</h1>
+
+            <label>Movie</label>
+            <input type="text" name="title" id="title" placeholder="Enter Movie Title"/>
+            <p></p>
+            <label>Release Date</label>
+            <input type="date" name="release_date" id="release_date"/>
+            <p></p>
+            <label>Runtime</label>
+            <input type="text" name="runtime" id="runtime" placeholder="Enter Movie Runtime"/>
+            <p></p>
+            <label>Genre</label>
+            <select name="genre" id="genre">
+                <option value="G1">Mystery</option>
+                <option value="G2">Action</option>
+                <option value="G3">Romance</option>
+                <option value="G4">Comedy</option>
+                <option value="G5">Drama</option>
+                <option value="G6">Animation</option>
+                <option value="G7">Fantasy</option>
+                <option value="G8">Thriller</option>
+                <option value="G9">Horror</option>
+                <option value="G10">Sci-Fi</option>
+            </select>
+            
+            <br></br>
+
+            <input type="submit" value="Back" id="backBtn" onclick="location.href = 'admin.html'">
+            <input type="text" size="20" style="visibility: hidden;" />
+            <input type="submit" id=submitBtn  value="Submit">
+        </form>
+
+        <script>
+            const title = document.getElementById('title')
+            const release_date = document.getElementById('release_date')
+            const runtime = document.getElementById('runtime')
+            const genre = document.getElementById('genre')
+
+            const submitBtn = document.getElementById('submitBtn')
+            submitBtn.addEventListener('click', addMovie)
+
+            async function addMovie (e) {
+            e.preventDefault()
+            if (title.value && release_date.value && runtime.value && genre.value)
+            {
+                const options = {
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        title: title.value, 
+                        release_date: release_date.value,
+                        runtime: runtime.value,
+                        genre: genre.value
+                    }) 
+                }
+                //console.log(options)
+                const response = await fetch('api/add_new_movie', options);
+                const data = await response.json()
+                
+                if (response.status == 200) {
+                    alert('New movie is sucessfully inserted!'); 
+                    document.getElementById('backBtn').click();
+                }
+                else alert('ERROR!');
+
+            } 
+            else 
+            {
+                alert("Please fill all form!")
+            }
+        }
+        </script>
     </body>
 </html>

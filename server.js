@@ -18,6 +18,7 @@ app.use(bp.urlencoded({ extended: true }));
 
 app.use(express.static("public")); // anything in public can be send in here
 
+/*
 const db = new Client({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -26,6 +27,15 @@ const db = new Client({
     port: 5432,
     ssl: true
 })
+*/
+
+const db = new Client({
+  host: "localhost",
+  user: "postgres",
+  database: "web_movie_database",
+  password: "haekal",
+  port: 5432,
+});
 
 // session middleware
 const oneDay = 1000 * 60 * 60 * 24;
@@ -57,7 +67,7 @@ app.post("/api/login", async (req, res) => {
       return;
     }
     const dataPassword = JSON.parse(JSON.stringify(results.rows));
-    console.log(dataPassword)
+    //console.log(dataPassword)
     try {
       if (await bcrypt.compare(password, dataPassword[0].password)) {
         let user_session = req.session;
@@ -233,6 +243,79 @@ app.post("/api/update_status", (req, res) => {
   });
 });
 
+app.post("/api/add_new_movie", (req, res) => {
+  const { title, release_date, runtime, genre } = req.body;
+  
+  const query = 
+  `INSERT INTO movies (title, release_date, runtime, genre_id) VALUES 
+	('${title}', '${release_date}', '${runtime}', '${genre}');`;
+
+  console.log(query)
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.log(err);
+      res.status(503).send({ status: "ERROR" });
+      return;
+    }
+    //console.log(results.rows);
+    res.status(200).send({ status: "OK" });
+  });
+});
+
+app.get("/api/get_movie", (req, res) => {
+  const title = req.query.title;
+  console.log(title);
+  const query = `SELECT * FROM movies WHERE title='${title}';`;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.log(err);
+      res.status(503).send({ status: "ERROR" });
+      return;
+    }
+    console.log(results.rows);
+    res.status(200).send(results.rows);
+  });
+});
+
+app.post("/api/update_movie", (req, res) => {
+  const { original_title, title, release_date, runtime, genre } = req.body;
+  const query = 
+    `UPDATE movies SET 
+      title='${title}', 
+      release_date='${release_date}', 
+      runtime='${runtime}', 
+      genre_id='${genre}'
+    WHERE title = '${original_title}';`;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.log(err);
+      res.status(503).send({ status: "ERROR" });
+      return;
+    }
+    console.log(results.rows);
+    res.status(200).send({ status: "OK" });
+  });
+});
+
+app.post("/api/delete_movie", (req, res) => {
+  const { title } = req.body;
+  const query = `DELETE FROM movies WHERE title='${title}';`;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.log(err);
+      res.status(503).send({ status: "ERROR" });
+      return;
+    }
+    console.log(results.rows);
+    res.status(200).send({ status: "OK" });
+  });
+});
+
+// DONT TOUCH THIS
 db.connect((err) => {
   if (err) {
     console.log(err);

@@ -51,7 +51,7 @@ app.get("/api/get_session", (req, res) => {
 app.post("/api/login", async (req, res) => {
   const { username, password } = req.body;
   const query = `SELECT password FROM users WHERE username = '${username}'`;
-  db.query(query, (err, results) => {
+  db.query(query, async (err, results) => {
     if (err) {
       console.log(err);
       return;
@@ -59,7 +59,7 @@ app.post("/api/login", async (req, res) => {
     const dataPassword = JSON.parse(JSON.stringify(results.rows));
     console.log(dataPassword)
     try {
-      if (bcrypt.compare(password, dataPassword[0].password)) {
+      if (await bcrypt.compare(password, dataPassword[0].password)) {
         let user_session = req.session;
         user_session.userid = username;
         console.log(`Login as ${user_session.userid}`);
@@ -70,11 +70,12 @@ app.post("/api/login", async (req, res) => {
           res.redirect("../admin.html");
         }
       } else {
-        res.send("Invalid username or password");
+        alert("password incorrect");
+        res.redirect("../login.html");
       }
-    } catch(err) {
-      console.log(err)
-      res.send("Invalid username or password");
+    } catch {
+      alert("password doesn't match!");
+      res.redirect("../login.html");
     }
   });
 });
@@ -88,11 +89,10 @@ app.post("/api/register", async (req, res) => {
 
   //kondisi apabila username sama dengan database belum
   if (!username || !password || !repassword) {
-    alert("Enter all fields!");
+    alert("please enter all fields");
     res.redirect("../register.html");
-  }
-  if (password != repassword) {
-    alert("Password doesn't match!");
+  } else if (password != repassword) {
+    alert("password doesn't match");
     res.redirect("../register.html");
   } else {
     //form passed
@@ -164,7 +164,7 @@ app.post("/api/search_from_user", (req, res) => {
 app.post("/api/search_from_admin", (req, res) => {
   let { title } = req.body;
   title = title.toLowerCase();
-  
+
   const query = `SELECT 
         m.movie_id,
         m.title, 

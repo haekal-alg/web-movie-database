@@ -18,7 +18,7 @@ app.use(bp.urlencoded({ extended: true }));
 
 app.use(express.static("public")); // anything in public can be send in here
 
-/*
+
 const db = new Client({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -27,8 +27,8 @@ const db = new Client({
     port: 5432,
     ssl: true
 })
-*/
 
+/*
 const db = new Client({
   host: "localhost",
   user: "postgres",
@@ -36,6 +36,7 @@ const db = new Client({
   password: "haekal",
   port: 5432,
 });
+*/
 
 // session middleware
 const oneDay = 1000 * 60 * 60 * 24;
@@ -303,6 +304,24 @@ app.post("/api/update_movie", (req, res) => {
 app.post("/api/delete_movie", (req, res) => {
   const { title } = req.body;
   const query = `DELETE FROM movies WHERE title='${title}';`;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.log(err);
+      res.status(503).send({ status: "ERROR" });
+      return;
+    }
+    console.log(results.rows);
+    res.status(200).send({ status: "OK" });
+  });
+});
+
+app.post("/api/rate_movie", (req, res) => {
+  const { user, title, rate } = req.body;
+  const query = 
+  `INSERT INTO users_ratings (username, movie_id, user_rating) VALUES 
+	  ('${user}', (SELECT movie_id FROM movies WHERE title = '${title}'), ${rate}) 
+	  ON CONFLICT (username, movie_id) DO UPDATE SET user_rating = ${rate};`;
 
   db.query(query, (err, results) => {
     if (err) {

@@ -132,17 +132,17 @@
                     } 
                     else if (value == 'user_rating') 
                     {
-                        if (!item)
-                        {
+                        //if (!item)
+                        //{
                             var createHref = document.createElement('a');
-                            var createText = document.createTextNode('Rate');
-                            createHref.href = '#'
+                            var createText = document.createTextNode(!item? 'Rate': item+'/10');
+                            createHref.href = '/rating.html?title='+movieTitles[radioId]+'&user='+usernameParagraph.innerHTML
 
                             createHref.appendChild(createText);
                             cell.appendChild(createHref)
                             row.appendChild(cell);
                             continue;
-                        } 
+                        //} 
                     } 
                     // https://stackoverflow.com/questions/8838648/onchange-event-handler-for-radio-button-input-type-radio-doesnt-work-as-one
                     else if (value == 'status') 

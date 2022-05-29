@@ -13,28 +13,28 @@
         <div class="edit">EDIT</div>
       </div>
       <div class="star-widget">
-		<input type="radio" name="rate" id="rate-10" onclick="">
-        <label for="rate-10" class="fas fa-star"></label>
-		<input type="radio" name="rate" id="rate-9" onclick="">
-        <label for="rate-9" class="fas fa-star"></label>
-		<input type="radio" name="rate" id="rate-8" onclick="">
-        <label for="rate-8" class="fas fa-star"></label>
-		<input type="radio" name="rate" id="rate-7" onclick="">
-        <label for="rate-7" class="fas fa-star"></label>
-		<input type="radio" name="rate" id="rate-6" onclick="">
-        <label for="rate-6" class="fas fa-star" ></label>
-    <input type="radio" name="rate" id="rate-5" onclick="">
-        <label for="rate-5" class="fas fa-star"></label>
-    <input type="radio" name="rate" id="rate-4" onclick="">
-        <label for="rate-4" class="fas fa-star"></label>
-    <input type="radio" name="rate" id="rate-3" onclick="">
-        <label for="rate-3" class="fas fa-star"></label>
-    <input type="radio" name="rate" id="rate-2" onclick="">
-        <label for="rate-2" class="fas fa-star"></label>
-    <input type="radio" name="rate" id="rate-1" onclick="">
-        <label for="rate-1" class="fas fa-star"></label>
-        <form action="#">
-          <header></header>
+        <input type="radio" name="rate" id="rate-10" value=10 onclick="setRating(this)">
+            <label for="rate-10" class="fas fa-star"></label>
+        <input type="radio" name="rate" id="rate-9" value=9 onclick="setRating(this)">
+            <label for="rate-9" class="fas fa-star"></label>
+        <input type="radio" name="rate" id="rate-8" value=8 onclick="setRating(this)">
+            <label for="rate-8" class="fas fa-star"></label>
+        <input type="radio" name="rate" id="rate-7" value=7 onclick="setRating(this)">
+            <label for="rate-7" class="fas fa-star"></label>
+        <input type="radio" name="rate" id="rate-6" value=6 onclick="setRating(this)">
+            <label for="rate-6" class="fas fa-star" ></label>
+        <input type="radio" name="rate" id="rate-5" value=5 onclick="setRating(this)">
+            <label for="rate-5" class="fas fa-star"></label>
+        <input type="radio" name="rate" id="rate-4" value=4 onclick="setRating(this)">
+            <label for="rate-4" class="fas fa-star"></label>
+        <input type="radio" name="rate" id="rate-3" value=3 onclick="setRating(this)">
+            <label for="rate-3" class="fas fa-star"></label>
+        <input type="radio" name="rate" id="rate-2" value=2 onclick="setRating(this)">
+            <label for="rate-2" class="fas fa-star"></label>
+        <input type="radio" name="rate" id="rate-1" value=1 onclick="setRating(this)">
+            <label for="rate-1" class="fas fa-star"></label>
+            <form action="#">
+              <header></header>
           <div class="btn">
             <button type="submit">Rate</button>
           </div>
@@ -43,31 +43,49 @@
     </div>
 
     <script>
+      var rating;
       const btn = document.querySelector("button");
       const ratebtn = document.querySelector(".post");
       const widget = document.querySelector(".star-widget");
       const editbtn = document.querySelector(".edit");
-      btn.onclick = ()=>{
-        widget.style.display = "none";
-        ratebtn.style.display = "block";
-		ratebtn.onclick =  ()=>{
-      async function postRating (e) {
-            e.preventDefault()
-            const options = {
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ movie: searchInput.value, rating: usernameParagraph.innerHTML}) 
-            }
-            const response = await fetch('api/search_from_user', options);
+
+      var url_string = window.location.href;
+      var url = new URL(url_string);
+      var getTitle = url.searchParams.get("title");
+      var getUser = url.searchParams.get("user");
+      
+      btn.addEventListener('click', rateMovie)
+      async function rateMovie (e) {
+        e.preventDefault()
+        //console.log(getUser)
+        //console.log(getTitle)
+        //console.log(widget)
+        
+        const options = {
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                user: getUser,
+                title: getTitle,
+                rate: rating
+            }) 
+        } 
+        const response = await fetch('api/rate_movie', options);
+        const data = await response.json();
+        
+        if (response.status == 200) {
+            alert('Movie is sucessfully updated!'); 
+            window.location = "http://localhost:8080/search.html"
         }
-		}
-        editbtn.onclick = ()=>{
-          widget.style.display = "block";
-          ratebtn.style.display = "none";
-          
-        }
-        return false;
+        else alert('ERROR!');
+        
       }
+      async function setRating (e) {
+        //console.log(e.value)
+        rating = e.value;
+      }
+
+
     </script>
   </body>
 </html>

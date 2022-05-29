@@ -18,22 +18,14 @@ app.use(bp.urlencoded({ extended: true }));
 
 app.use(express.static("public")); // anything in public can be send in here
 
-// const db = new Client({
-//     host: process.env.DB_HOST,
-//     user: process.env.DB_USER,
-//     database: process.env.DB_DATABASE,
-//     password: process.env.DB_PASSWORD,
-//     port: 5432,
-//     ssl: true
-// })
-
 const db = new Client({
-  host: "haekal-sbd.postgres.database.azure.com",
-  user: "haekal_sbd",
-  database: "web_movie_database",
-  password: "Random123",
-  ssl: true,
-});
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    database: process.env.DB_DATABASE,
+    password: process.env.DB_PASSWORD,
+    port: 5432,
+    ssl: true
+})
 
 // session middleware
 const oneDay = 1000 * 60 * 60 * 24;
@@ -65,6 +57,7 @@ app.post("/api/login", async (req, res) => {
       return;
     }
     const dataPassword = JSON.parse(JSON.stringify(results.rows));
+    console.log(dataPassword)
     try {
       if (bcrypt.compare(password, dataPassword[0].password)) {
         let user_session = req.session;
@@ -79,8 +72,9 @@ app.post("/api/login", async (req, res) => {
       } else {
         res.send("Invalid username or password");
       }
-    } catch {
-      res.status(500).send("gagal");
+    } catch(err) {
+      console.log(err)
+      res.send("Invalid username or password");
     }
   });
 });
@@ -123,7 +117,9 @@ app.get("/api/logout", (req, res) => {
 });
 
 app.post("/api/search_from_user", (req, res) => {
-  const { title, username } = req.body;
+  let { title, username } = req.body;
+  title = title.toLowerCase();
+
   console.log(username);
   const query = `SELECT 
         m.title, 
@@ -166,8 +162,9 @@ app.post("/api/search_from_user", (req, res) => {
 });
 
 app.post("/api/search_from_admin", (req, res) => {
-  const { title } = req.body;
-
+  let { title } = req.body;
+  title = title.toLowerCase();
+  
   const query = `SELECT 
         m.movie_id,
         m.title, 
